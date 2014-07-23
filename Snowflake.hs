@@ -1,29 +1,28 @@
 import SOE
 
 minSize :: Int
-minSize = 4
+minSize = 2
 
 equiTri :: Int -> Int -> Int -> Int -> [(Int, Int)]
 equiTri x y size dir =
    let s :: Double
        s = fromIntegral size
-       c = round (sqrt (2 * s ^ 2 * 1.5))
-       t = round (s * 0.5)
-       y1 = y - round (s / 3)
-       p1 = (x, y1 - (dir * size))
-       p2 = (x - c `div` 2, (y1 + (dir * t)))
-       p3 = (x + c `div` 2, (y1 + (dir * t)))
+       c = round (sqrt (2 * s ^ 2 * 1.5))    -- 1 - cos(pi * 2/3) => 1.5
+       t = round (s * 0.5)                   -- cos(pi / 3) => 0.5
+       p1 = (x, y - (dir * size))
+       p2 = (x - c `div` 2, (y + (dir * t)))
+       p3 = (x + c `div` 2, (y + (dir * t)))
    in [p1, p2, p3]
 
-drawTri :: Window -> [(Int, Int)] -> [(Int, Int)] -> IO()
-drawTri w p1 p2 =
+drawTri :: Window -> Color -> [(Int, Int)] -> [(Int, Int)] -> IO()
+drawTri w c p1 p2 =
     do
-        (drawInWindow w (withColor Blue (polygon p1)))
-        (drawInWindow w (withColor Blue (polygon p2)))
+        (drawInWindow w (withColor c (polygon p1)))
+        (drawInWindow w (withColor c (polygon p2)))
 
 
-fillTri :: Window -> Int -> Int -> Int -> IO()
-fillTri w x y size =
+fillTri :: Window -> [Color] -> Int -> Int -> Int -> IO()
+fillTri w (c:cs) x y size =
   let
       p1 = equiTri x y size 1
       p2 = equiTri x y size (-1)
@@ -38,23 +37,24 @@ fillTri w x y size =
                 (x5, y5) = p2 !! 1
                 (x6, y6) = p2 !! 2
            in do
-                drawTri w p1 p2
-                fillTri w x1 y1 s
-                fillTri w x2 y2 s
-                fillTri w x3 y3 s
-                fillTri w x4 y4 s
-                fillTri w x5 y5 s
-                fillTri w x6 y6 s
+                drawTri w c p1 p2
+                fillTri w cs x1 y1 s
+                fillTri w cs x2 y2 s
+                fillTri w cs x3 y3 s
+                fillTri w cs x4 y4 s
+                fillTri w cs x5 y5 s
+                fillTri w cs x6 y6 s
       else return ()
 
 snowflake :: Window -> Int -> Int -> Int -> IO()
 snowflake w x y size =
-     fillTri w x y size
+     let colors = [Blue, Green, Cyan, Red, Magenta, Yellow]
+     in fillTri w colors x y size
 
 main =
   runGraphics(
-    do w <- openWindow "snowflake" (400, 400)
-       snowflake w 200 200 100
+    do w <- openWindow "snowflake" (800, 800)
+       snowflake w 400 400 200
        k <- getKey w
        closeWindow w
     )
