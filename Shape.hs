@@ -53,15 +53,25 @@ testVerticesConvex :: [Vertex]
 testVerticesConvex = [(-20, 20),(-10,40),(20,30),(25,20),(10,10),(-10,10),(-20,20)]
 testPolygonConvex = Polygon testVerticesConvex
 
+-- special trapezoid determined by two vertices and the y == 0 vertex equivalents.
 trapArea :: Vertex -> Vertex -> Float
 trapArea (x1,y1) (x2,y2)  =
     (x2 - x1) * (y2 + y1) / 2
 
 area :: Shape -> Float
-area (Polygon vs) = polyArea vs
-   where polyArea :: [Vertex] -> Float
-         polyArea (v1:v2:vs') = (trapArea v1 v2) + polyArea (v2:vs')
-         polyArea _ = 0
+area (Rectangle s1 s2) = s1 * s2
+area (RtTriangle s1 s2) = s1 * s2 / 2
+area (Ellipse r1 r2) = pi * r1 * r2
+-- this is the exercise 2.5 method
+area (Polygon vs) =
+    let ps = zip (init vs) (tail vs)
+    in sum (map (\(x,y) -> trapArea x y) ps)
+
+-- recursive version
+-- area (Polygon vs) = polyArea vs
+--    where polyArea :: [Vertex] -> Float
+--          polyArea (v1:v2:vs') = (trapArea v1 v2) + polyArea (v2:vs')
+--          polyArea _ = 0
 
 slope :: Vertex -> Vertex -> Float
 slope (x1, y1) (x2, y2) = (y2 - y1) / (x2 - x1)
@@ -83,3 +93,20 @@ angle v1 v2 v3 =
       b = distance v3 v2
       c = distance v1 v3
   in  acos ((a ^ 2 + b ^ 2 - c ^ 2) / (2 * a * b))
+
+crossProduct :: Vertex -> Vertex -> Vertex -> Float
+crossProduct (x1, y1) (x2, y2) (x3, y3) = (x2 - x1) * (y3 - y2)
+                                          - (y2 - y1) * (x3 - x2)
+
+crossProducts :: [Vertex] -> [Float]
+crossProducts (v1:v2:vs) =
+    let vsi = init vs
+        z = zip3 (v1:v2:vsi) ((v2:vsi) ++ [v1]) (vsi ++ [v1] ++ [v2])
+    in  map (\(v1, v2, v3) -> crossProduct v1 v2 v3) z
+
+-- exercise 2.4
+-- the cross products of all the angles should be the same sign
+convex :: Shape -> Bool
+convex (Polygon vs) =
+    let z = crossProducts vs
+    in (and $ map (< 0) z) || (and $ map (> 0) z)
