@@ -46,11 +46,11 @@ regularPolygon n s =
    in Polygon $ map v [0..n]
 
 testVerticesConcave :: [Vertex]
-testVerticesConcave = [(-20, 20),(-10,40),(20,30),(15,20),(10,10),(-10,10),(-20,20)]
+testVerticesConcave = [(-20, 20),(-10,40),(20,30),(15,20),(10,10),(-10,10)]
 testPolygonConcave = Polygon testVerticesConcave
 
 testVerticesConvex :: [Vertex]
-testVerticesConvex = [(-20, 20),(-10,40),(20,30),(25,20),(10,10),(-10,10),(-20,20)]
+testVerticesConvex = [(-20, 20),(-10,40),(20,30),(25,20),(10,10),(-10,10)]
 testPolygonConvex = Polygon testVerticesConvex
 
 -- special trapezoid determined by two vertices and the y == 0 vertex equivalents.
@@ -78,20 +78,21 @@ slope (x1, y1) (x2, y2) = (y2 - y1) / (x2 - x1)
 
 
 angles :: [Vertex] -> [Float]
-angles (v1:v2:v3:vs) = (angle v1 v2 v3):(angles (v2:v3:vs))
-angles _ = []
+angles vs = angles' (vs ++ take 2 vs) where
+       angles' (v1:v2:v3:vs) = (angle v1 v2 v3):(angles' (v2:v3:vs))
+       angles' _ = []
 
 subtractVertices :: Vertex -> Vertex -> Vertex
 subtractVertices (x1,y1) (x2, y2) = (x1 - x2, y1 - y2)
 
-distance :: Vertex -> Vertex -> Float
-distance (x1, y1) (x2, y2) = sqrt ((x2 - x1) ^ 2 + (y2 - y1) ^ 2)
+distBetween :: Vertex -> Vertex -> Float
+distBetween (x1, y1) (x2, y2) = sqrt ((x2 - x1) ^ 2 + (y2 - y1) ^ 2)
 
 angle :: Vertex -> Vertex -> Vertex -> Float
 angle v1 v2 v3 =
-  let a = distance v1 v2
-      b = distance v3 v2
-      c = distance v1 v3
+  let a = distBetween v1 v2
+      b = distBetween v3 v2
+      c = distBetween v1 v3
   in  acos ((a ^ 2 + b ^ 2 - c ^ 2) / (2 * a * b))
 
 crossProduct :: Vertex -> Vertex -> Vertex -> Float
@@ -100,8 +101,7 @@ crossProduct (x1, y1) (x2, y2) (x3, y3) = (x2 - x1) * (y3 - y2)
 
 crossProducts :: [Vertex] -> [Float]
 crossProducts (v1:v2:vs) =
-    let vsi = init vs
-        z = zip3 (v1:v2:vsi) ((v2:vsi) ++ [v1]) (vsi ++ [v1] ++ [v2])
+    let z = zip3 (v1:v2:vs) ((v2:vs) ++ [v1]) (vs ++ [v1, v2])
     in  map (\(v1, v2, v3) -> crossProduct v1 v2 v3) z
 
 -- exercise 2.4
@@ -110,3 +110,6 @@ convex :: Shape -> Bool
 convex (Polygon vs) =
     let z = crossProducts vs
     in (and $ map (< 0) z) || (and $ map (> 0) z)
+
+sides :: [Vertex] -> [Side]
+sides vs = zipWith distBetween vs (tail vs ++ [head vs])
