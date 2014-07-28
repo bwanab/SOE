@@ -30,21 +30,17 @@ fillTri w (c:cs) x y size =
       if size > minSize
       then let
                 s = size `div` 3
-                (x1, y1) = p1 !! 0
-                (x2, y2) = p1 !! 1
-                (x3, y3) = p1 !! 2
-                (x4, y4) = p2 !! 0
-                (x5, y5) = p2 !! 1
-                (x6, y6) = p2 !! 2
            in do
                 drawTri w c p1 p2
-                fillTri w cs x1 y1 s
-                fillTri w cs x2 y2 s
-                fillTri w cs x3 y3 s
-                fillTri w cs x4 y4 s
-                fillTri w cs x5 y5 s
-                fillTri w cs x6 y6 s
+                fillTris w cs (p1 ++ p2) s
       else return ()
+
+fillTris :: Window -> [Color] -> [Point] -> Int -> IO()
+fillTris _ _ [] _ = return()
+fillTris w cs ((x,y):ps) size =
+   do
+       fillTri w cs x y size
+       fillTris w cs ps size
 
 snowflake :: Window -> Int -> Int -> Int -> IO()
 snowflake w x y size =
