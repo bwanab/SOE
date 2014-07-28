@@ -71,19 +71,21 @@ data Expr = C Float | Expr :+ Expr | Expr :- Expr | Expr :* Expr | Expr :/ Expr 
             Let String Expr Expr | V String deriving Show
 
 evaluate :: Expr -> Float
-evaluate (C x) = x
-evaluate (e1 :+ e2) = evaluate e1 + evaluate e2
-evaluate (e1 :- e2) = evaluate e1 - evaluate e2
-evaluate (e1 :* e2) = evaluate e1 * evaluate e2
-evaluate (e1 :/ e2) = evaluate e1 / evaluate e2
-evaluate (Let s val (C x)) = x
-evaluate (Let s val (e1 :+ e2)) = (evaluate (Let s val e1)) + (evaluate (Let s val e2))
-evaluate (Let s val (e1 :- e2)) = (evaluate (Let s val e1)) - (evaluate (Let s val e2))
-evaluate (Let s val (e1 :* e2)) = (evaluate (Let s val e1)) * (evaluate (Let s val e2))
-evaluate (Let s val (e1 :/ e2)) = (evaluate (Let s val e1)) / (evaluate (Let s val e2))
-evaluate (Let s val (V s2)) | s == s2 = evaluate val
-                            | otherwise = error "undefined variable"
+evaluate e =
+   let eval :: Expr -> [(String, Float)] -> Float
+       eval (C x) vars = x
+       eval (e1 :+ e2) vars = eval e1 vars + eval e2 vars
+       eval (e1 :- e2) vars = eval e1 vars - eval e2 vars
+       eval (e1 :* e2) vars = eval e1 vars * eval e2 vars
+       eval (e1 :/ e2) vars = eval e1 vars / eval e2 vars
+       eval (V s) vars = lookup s vars
+          where lookup i [] = error ("no definition for " ++ s)
+                lookup i ((a,b):vars) = if i == a then b else lookup i vars
+       eval (Let s e1 e2) vars = let es = eval e1 vars
+                                 in eval e2 ((s, es):vars)
+   in eval e []
 
 testExpr1 = (C 10 :+ (C 8 :/ C 2)) :* (C 7 :- C 4)
 testExpr2 = Let "x" (C 5) (V "x" :+ (V "x"))
 testExpr3 = Let "x" (V "y") (Let "y" (C 6.0) (V "x"))
+testExpr4 = Let "x" (C 3.0) (Let "y" (V "x") (Let "x" (C 2.0) (V "y")))
