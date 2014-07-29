@@ -26,4 +26,17 @@ fix :: (a -> a) -> a
 fix f = f (fix f)
 
 remainder' :: Integer -> Integer -> Integer
-remainder' = fix (\f a b -> if a < b then a else f (a - b) b)
+remainder' a b = fix (r b) a
+    where r b = (\f x -> if x < b then x else f (x - b))
+
+-- ex 9.10
+
+r1 xs = map (\x -> (x + 1) / 2) xs
+r2 = map ((+1).(/2))
+
+-- ex 9.11
+
+r3 f g xs = map f (map g xs)
+r4 f g = map (f.g)
+
+r5 xs = map (+1) (map (/2) xs)
