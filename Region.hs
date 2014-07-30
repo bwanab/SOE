@@ -1,4 +1,5 @@
-module Region (Region (Shape, Translate, Scale, Complement, Union, Intersect, Empty),
+module Region (Region (Shape, Translate, Scale, Complement,
+                       Union, Intersect, Halfplane, Empty),
                Coordinate, containsS, containsR,
                module Shape) where
 import Shape
@@ -12,6 +13,7 @@ data Region = Shape Shape
             | Complement Region
             | Union Region Region
             | Intersect Region Region
+            | Halfplane Point Point
             | Empty  deriving Show
 
 type Point = (Float, Float)
@@ -51,6 +53,8 @@ containsR (Complement r) p = not (containsR r p)
 containsR Empty p = False
 containsR (Union r1 r2) p = containsR r1 p || containsR r2 p
 containsR (Intersect r1 r2) p = containsR r1 p && containsR r2 p
+containsR (Halfplane p1 p2) p = isLeftOf p (p1, p2)
+
 
 -- ex 8.3
 annulus :: Radius -> Radius -> Region
@@ -60,3 +64,10 @@ annulus r1 r2 =
                       c2 = Ellipse r2 r2
                   in Intersect (Shape c1) (Shape c2)
    in a r1' r2'
+
+-- ex 8.7
+flipX :: Region -> Region
+flipX r = Scale (-1, 1) r
+
+flipY :: Region -> Region
+flipY r = Scale (1, -1) r
