@@ -56,12 +56,12 @@ testPolygonConvex = Polygon testVerticesConvex
 -- special trapezoid determined by two vertices and the y == 0 vertex equivalents.
 trapArea :: Vertex -> Vertex -> Float
 trapArea (x1,y1) (x2,y2)  =
-    (x2 - x1) * (y2 + y1) / 2
+    abs ((x2 - x1) * (y2 + y1) / 2)
 
 area :: Shape -> Float
-area (Rectangle s1 s2) = s1 * s2
-area (RtTriangle s1 s2) = s1 * s2 / 2
-area (Ellipse r1 r2) = pi * r1 * r2
+area (Rectangle s1 s2) = abs (s1 * s2)
+area (RtTriangle s1 s2) = abs (s1 * s2 / 2)
+area (Ellipse r1 r2) = abs (pi * r1 * r2)
 -- this is the exercise 2.5 method
 area (Polygon vs) =
     let ps = zip (init vs) (tail vs)
@@ -113,3 +113,10 @@ convex (Polygon vs) =
 
 sides :: [Vertex] -> [Side]
 sides vs = zipWith distBetween vs (tail vs ++ [head vs])
+
+isClockwise :: [Vertex] -> Bool
+isClockwise vs =
+    let cp = crossProducts vs
+        t = map (\v -> if v < 0 then 1 else -1) cp
+        s = sum t
+    in s > 0
