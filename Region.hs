@@ -1,6 +1,6 @@
 module Region (Region (Shape, Translate, Scale, Complement,
                        Union, Intersect, Halfplane, Empty),
-               Coordinate, containsS, containsR,
+               Coordinate, containsS, containsR, annulus,
                module Shape) where
 import Shape
 
@@ -62,7 +62,7 @@ annulus r1 r2 =
    let (r1', r2') = if (r1 > r2) then (r1, r2) else (r2, r1)
        a r1 r2 =  let c1 = Ellipse r1 r1
                       c2 = Ellipse r2 r2
-                  in Intersect (Shape c1) (Shape c2)
+                  in Intersect (Shape c1) (Complement (Shape c2))
    in a r1' r2'
 
 -- ex 8.7
