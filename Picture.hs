@@ -85,8 +85,8 @@ shapeToGRegion (lx, ly) (sx, sy) s =
       RtTriangle s1 s2 ->
          createPolygon (map trans [(0,0),(s1,0),(0,s2)])
    where trans :: Vertex -> Point
-         trans (x,y) = (xWin2 + inchToPixel ((x + lx) * sx),
-                        yWin2 - inchToPixel ((y + ly) * sy))
+         trans (x,y) = (xWin2 + inchToPixel (lx + x * sx),
+                        yWin2 - inchToPixel (ly + y * sy))
 
 
 
@@ -118,6 +118,6 @@ reg2 = let circle = Shape (Ellipse 0.5 0.5)
            `Union` (Translate (1,0) square)
            `Union` (Translate (-1,0) square)
 
-pic2 = Region Yellow (Translate (0, -1) reg2)
+pic2 = Region Yellow (Translate (0, 0) reg2)
 
 pic3 = pic2 `Over` pic1
