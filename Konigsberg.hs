@@ -19,8 +19,8 @@ b7 = Bridge 7 3 4
    -}
 
 b8 = Bridge 8 3 4
-bridges = [b1,b2,b3,b4,b5,b6,b7]
---bridges8 = [b1,b2,b3,b4,b5,b6,b7,b8]
+bridges7 = [b1,b2,b3,b4,b5,b6,b7]
+bridges8 = [b1,b2,b3,b4,b5,b6,b7,b8]
 
 find :: Bridge -> [Bridge] -> Bool
 find _ [] = False
@@ -29,8 +29,8 @@ find a (b:bs) = if a == b then True else find a bs
 bridgesOnPlace :: [Bridge] -> Place -> [Bridge]
 bridgesOnPlace bs p = [(Bridge bn p1 p2) | (Bridge bn p1 p2) <- bs, p == p1 || p == p2]
 
-places :: [[Bridge]]
-places = map (bridgesOnPlace bridges) [1..4]
+--places :: [[Bridge]]
+
 
 data BridgeTree = Leaf [Bridge] | Branch [BridgeTree] deriving (Show)
 
@@ -59,17 +59,25 @@ data BridgeTree = Leaf [Bridge] | Branch [BridgeTree] deriving (Show)
    and recursing through.
    -}
 
-buildTreeX2 :: [Bridge] -> Bridge -> Place -> BridgeTree
-buildTreeX2 bs (Bridge b p1 p2) p = buildTreeX bs $ if p == p1 then p2 else p1
+-- buildTreeX2 :: [Bridge] -> Bridge -> Place -> BridgeTree
+-- buildTreeX2 bs (Bridge b p1 p2) p = buildTreeX bs $ if p == p1 then p2 else p1
 
-buildTreeX1 :: [Bridge] -> Bridge -> Place -> BridgeTree
-buildTreeX1 bs b p
-    | find b bs = Leaf bs
-    | otherwise = buildTreeX2 (b:bs) b p
+-- buildTreeX1 :: [Bridge] -> Bridge -> Place -> BridgeTree
+-- buildTreeX1 bs b p
+--     | find b bs = Leaf bs
+--     | otherwise = buildTreeX2 (b:bs) b p
 
-buildTreeX bs p = Branch (map (\(p1,b) -> buildTreeX1 bs b p1) $ zip (repeat p) (places !! (p - 1)))
+-- buildTreeX bs p = Branch (map (\(p1,b) -> buildTreeX1 bs b p1) $ zip (repeat p) (places !! (p - 1)))
 
-buildTree p = buildTreeX [] p
+buildTree :: [Bridge] -> Place -> BridgeTree
+buildTree bridges p = buildTreeX [] p
+    where
+       places = map (bridgesOnPlace bridges) [1..4]
+       buildTreeX bs p = Branch (map (\(p1,b) -> buildTreeX1 bs b p1) $ zip (repeat p) (places !! (p - 1)))
+       buildTreeX1 bs b p
+           | find b bs = Leaf bs
+           | otherwise = buildTreeX2 (b:bs) b p
+       buildTreeX2 bs (Bridge b p1 p2) p = buildTreeX bs $ if p == p1 then p2 else p1
 
 bridgeFringe1 :: [BridgeTree] -> [[Bridge]]
 bridgeFringe1 [] = []
@@ -79,8 +87,8 @@ bridgeFringe :: BridgeTree -> [[Bridge]]
 bridgeFringe (Leaf x) = [x]
 bridgeFringe (Branch x) = bridgeFringe1 x
 
-test = let a = concat $ map (\p -> (bridgeFringe . buildTree) p) [1..4]
-           nb = length bridges
-           n = length $ filter (\x -> length x == nb) a
-       in if n > 0 then putStrLn ("there are " ++ show n ++ " paths")
-                   else putStrLn "there are no valid paths"
+test b = let a = concat $ map (\p -> (bridgeFringe . (buildTree b)) p) [1..4]
+             nb = length b
+             n = length $ filter (\x -> length x == nb) a
+         in if n > 0 then ("there are " ++ show n ++ " paths")
+                     else "there are no valid paths"
