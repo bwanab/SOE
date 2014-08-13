@@ -1,5 +1,7 @@
 module Konigsberg where
 
+import qualified Data.Set as Set
+
 type Place = Int
 
 data Bridge = Bridge Int Place Place deriving (Show,Eq,Ord)
@@ -32,7 +34,7 @@ bridgesOnPlace bs p = [(Bridge bn p1 p2) | (Bridge bn p1 p2) <- bs, p == p1 || p
 --places :: [[Bridge]]
 
 
-data BridgeTree = Leaf [Bridge] | Branch [BridgeTree] deriving (Show)
+data Tree a = Leaf [a] | Branch [Tree a] deriving (Show)
 
 {- first solution effort was to start at a bridge and traverse. Doesn't work
    since you lose directionality in your path.
@@ -69,7 +71,7 @@ data BridgeTree = Leaf [Bridge] | Branch [BridgeTree] deriving (Show)
 
 -- buildTreeX bs p = Branch (map (\(p1,b) -> buildTreeX1 bs b p1) $ zip (repeat p) (places !! (p - 1)))
 
-buildTree :: [Bridge] -> Place -> BridgeTree
+buildTree :: [Bridge] -> Place -> Tree Bridge
 buildTree bridges p = buildTreeX [] p
     where
        places = map (bridgesOnPlace bridges) [1..4]
@@ -79,15 +81,19 @@ buildTree bridges p = buildTreeX [] p
            | otherwise = buildTreeX2 (b:bs) b p
        buildTreeX2 bs (Bridge b p1 p2) p = buildTreeX bs $ if p == p1 then p2 else p1
 
-bridgeFringe1 :: [BridgeTree] -> [[Bridge]]
+bridgeFringe1 :: [Tree Bridge] -> [[Bridge]]
 bridgeFringe1 [] = []
 bridgeFringe1 (bt:bts) = bridgeFringe bt ++ bridgeFringe1 bts
 
-bridgeFringe :: BridgeTree -> [[Bridge]]
+bridgeFringe :: Tree Bridge -> [[Bridge]]
 bridgeFringe (Leaf x) = [x]
 bridgeFringe (Branch x) = bridgeFringe1 x
 
-test b = let a = concat $ map (\p -> (bridgeFringe . (buildTree b)) p) [1..4]
+findPaths b = let a = concat $ map (\p -> (bridgeFringe . (buildTree b)) p) [1..4]
+                  s = Set.fromList a
+              in Set.toList s
+
+test b = let a = findPaths b
              nb = length b
              n = length $ filter (\x -> length x == nb) a
          in if n > 0 then ("there are " ++ show n ++ " paths")
