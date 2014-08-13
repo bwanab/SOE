@@ -13,8 +13,14 @@ b4 = Bridge 4 1 3
 b5 = Bridge 5 1 3
 b6 = Bridge 6 1 4
 b7 = Bridge 7 3 4
+{- there's no solution for Konigsberg with 7 bridges, but if we add an eighth
+   which makes the degree even (either 0 or 2 places having and odd number of
+   bridges), then there are many solutions
+   -}
 
+b8 = Bridge 8 3 4
 bridges = [b1,b2,b3,b4,b5,b6,b7]
+--bridges8 = [b1,b2,b3,b4,b5,b6,b7,b8]
 
 find :: Bridge -> [Bridge] -> Bool
 find _ [] = False
@@ -26,17 +32,11 @@ bridgesOnPlace bs p = [(Bridge bn p1 p2) | (Bridge bn p1 p2) <- bs, p == p1 || p
 places :: [[Bridge]]
 places = map (bridgesOnPlace bridges) [1..4]
 
--- path1 :: Bridge -> [Bridge] -> [[Bridge]]
--- path1 b cpath acc | find b acc = cpath:acc
---                   | otherwise = paths1 (bridges !! (b - 1)) (b:cpath) acc
-
-
--- paths1 :: Place -> [Bridge] -> [[Bridge]] -> [[Bridge]]
--- paths1 p cpath acc = map (\b -> (path1 b b:cpath acc)) (places !! (p - 1))
-
--- paths ::  Place -> [[Bridge]]
--- paths p = paths1 p [] [[]]
 data BridgeTree = Leaf [Bridge] | Branch [BridgeTree] deriving (Show)
+
+{- first solution effort was to start at a bridge and traverse. Doesn't work
+   since you lose directionality in your path.
+   -}
 
 -- buildTree2 :: [Bridge] -> Bridge -> BridgeTree
 -- buildTree2 bs (Bridge b p1 p2) =
@@ -53,6 +53,11 @@ data BridgeTree = Leaf [Bridge] | Branch [BridgeTree] deriving (Show)
 -- buildTree b = buildTree1 [] b
 
 -- buildTrees = map buildTree bridges
+
+{- second and working solution is to start at a place, create a path for each of the
+   bridges that connect to that place, then starting at the place on the other side
+   and recursing through.
+   -}
 
 buildTreeX2 :: [Bridge] -> Bridge -> Place -> BridgeTree
 buildTreeX2 bs (Bridge b p1 p2) p = buildTreeX bs $ if p == p1 then p2 else p1
@@ -73,3 +78,9 @@ bridgeFringe1 (bt:bts) = bridgeFringe bt ++ bridgeFringe1 bts
 bridgeFringe :: BridgeTree -> [[Bridge]]
 bridgeFringe (Leaf x) = [x]
 bridgeFringe (Branch x) = bridgeFringe1 x
+
+test = let a = concat $ map (\p -> (bridgeFringe . buildTree) p) [1..4]
+           nb = length bridges
+           n = length $ filter (\x -> length x == nb) a
+       in if n > 0 then putStrLn ("there are " ++ show n ++ " paths")
+                   else putStrLn "there are no valid paths"
